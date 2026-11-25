@@ -133,7 +133,7 @@ async function execute(
     browser = await launchBrowser(profile);
   } catch (e) {
     throw new Error(
-      `could not launch ${PROFILE_DETAILS[profile].engine}: ${e instanceof Error ? e.message.split("\n")[0] : e}`,
+      `could not launch ${PROFILE_DETAILS[profile].engine}: ${launchErrorSummary(e)}`,
     );
   }
   onBrowser(browser);
@@ -250,6 +250,16 @@ async function execute(
     budgetUsage: usage,
   });
   await buildAndStoreReports(ctx, runId);
+}
+
+/** Keep the informative lines of a browser launch failure (Playwright puts the cause in later lines). */
+function launchErrorSummary(e: unknown): string {
+  if (!(e instanceof Error)) return String(e);
+  const lines = e.message
+    .split("\n")
+    .map((l) => l.trim())
+    .filter((l) => l && !/^=+|^Call log:|^-\s*<launching>|^-\s*<launched>/.test(l));
+  return lines.slice(0, 6).join(" | ").slice(0, 800);
 }
 
 function stopReason(stop: { kind: string; message?: string }): string {

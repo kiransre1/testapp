@@ -65,6 +65,9 @@ jobs:
           --health-interval 5s --health-timeout 3s --health-retries 20
     env:
       CI: "1"
+      # Firefox refuses to launch as root when $HOME belongs to another user
+      # (GitHub mounts /github/home); Playwright's documented container fix.
+      HOME: /root
       DATABASE_URL: postgres://testapp:ci-only-password@postgres:5432/testapp
     steps:
       - uses: actions/checkout@v4
