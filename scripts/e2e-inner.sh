@@ -4,9 +4,10 @@
 # credentials, starts demo target + web + worker in the background, runs the
 # Playwright suite, captures logs, and checks logs/exports for secret leakage.
 set -uo pipefail
-cd /repo
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT"
 export CI=1 NEXT_TELEMETRY_DISABLED=1
-DIAG="${DIAG_DIR:-/repo/diagnostics/e2e}"
+DIAG="${DIAG_DIR:-$ROOT/diagnostics/e2e}"
 mkdir -p "$DIAG"
 rnd() { node -e "process.stdout.write(require('crypto').randomBytes($1).toString('base64url'))"; }
 export SESSION_SECRET="$(rnd 48)"
@@ -23,14 +24,14 @@ export WORKER_POLL_INTERVAL_MS=500
 export E2E_ADMIN_EMAIL="$BOOTSTRAP_ADMIN_EMAIL" E2E_ADMIN_PASSWORD="$BOOTSTRAP_ADMIN_PASSWORD"
 export E2E_DEMO_USERNAME="$DEMO_USERNAME" E2E_DEMO_PASSWORD="$DEMO_PASSWORD"
 
-npm install -g pnpm@12.23.0 --no-fund --no-audit >/dev/null 2>&1
+command -v pnpm >/dev/null 2>&1 || npm install -g pnpm@12.23.0 --no-fund --no-audit >/dev/null 2>&1
 if [ "${SKIP_BUILD:-0}" != "1" ]; then
   pnpm install --frozen-lockfile >"$DIAG/install.log" 2>&1 || { echo "install failed"; tail -30 "$DIAG/install.log"; exit 1; }
   pnpm build >"$DIAG/build.log" 2>&1 || { echo "build failed"; tail -40 "$DIAG/build.log"; exit 1; }
 fi
 cp -r apps/web/.next/static apps/web/.next/standalone/apps/web/.next/ 2>/dev/null || true
 
-MIGRATIONS_DIR=/repo/packages/db/drizzle node apps/worker/dist/migrate.mjs || exit 1
+MIGRATIONS_DIR="$ROOT/packages/db/drizzle" node apps/worker/dist/migrate.mjs || exit 1
 node apps/worker/dist/bootstrap-admin.mjs || exit 1
 
 PIDS=()
@@ -38,7 +39,7 @@ cleanup() { for p in "${PIDS[@]}"; do kill "$p" 2>/dev/null; done; wait 2>/dev/n
 trap cleanup EXIT
 PORT=4000 HOST=127.0.0.1 node apps/demo-target/dist/server.mjs >"$DIAG/demo-target.log" 2>&1 & PIDS+=($!)
 (cd apps/web/.next/standalone && PORT=3000 HOSTNAME=127.0.0.1 node apps/web/server.js) >"$DIAG/web.log" 2>&1 & PIDS+=($!)
-FAKE_PROVIDER_FIXTURE_DIR=/repo/packages/core/fixtures node apps/worker/dist/main.mjs >"$DIAG/worker.log" 2>&1 & PIDS+=($!)
+FAKE_PROVIDER_FIXTURE_DIR="$ROOT/packages/core/fixtures" node apps/worker/dist/main.mjs >"$DIAG/worker.log" 2>&1 & PIDS+=($!)
 
 for url in http://127.0.0.1:4000/healthz http://127.0.0.1:3000/api/health; do
   ok=0; for _ in $(seq 1 90); do curl -fsS "$url" >/dev/null 2>&1 && { ok=1; break; }; sleep 1; done

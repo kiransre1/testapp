@@ -194,7 +194,11 @@ select {
 }
 input[type="checkbox"],
 input[type="radio"] {
-  width: auto;
+  /* WCAG 2.2 SC 2.5.8: at least 24×24 CSS px targets */
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  flex: none;
 }
 textarea {
   min-height: 7rem;

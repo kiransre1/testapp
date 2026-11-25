@@ -25,7 +25,18 @@ export type TargetPolicy = OriginPolicy & { forbiddenRoutes: readonly string[] }
 export async function launchBrowser(profile: BrowserProfile): Promise<Browser> {
   const engine = PROFILE_DETAILS[profile].engine;
   const launcher = engine === "firefox" ? firefox : engine === "webkit" ? webkit : chromium;
-  return launcher.launch({ headless: true, timeout: 60_000 });
+  // Top-level documents are delivered through TestApp's policy proxy (route.fetch +
+  // fulfil). Chromium's Local/Private Network Access checks then misclassify the
+  // document's address space and block the page's own same-origin requests to
+  // staging hosts on private networks, which would change target behaviour and
+  // create false findings. TestApp's origin policy governs destinations instead.
+  const args =
+    engine === "chromium"
+      ? [
+          "--disable-features=LocalNetworkAccessChecks,BlockInsecurePrivateNetworkRequests,PrivateNetworkAccessSendPreflights,PrivateNetworkAccessRespectPreflightResults",
+        ]
+      : [];
+  return launcher.launch({ headless: true, timeout: 60_000, args });
 }
 
 export function contextOptions(profile: BrowserProfile) {

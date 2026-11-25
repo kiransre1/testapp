@@ -121,10 +121,12 @@ test.describe
         (f) => f.category === "observed_runtime_symptom" && /TypeError/.test(f.title),
       );
       expect(pageError, "reports page error must be captured").toBeTruthy();
+      const runtimeTitles = r.findings
+        .filter((f) => f.category === "observed_runtime_symptom")
+        .map((f) => f.title);
       expect(
-        r.findings.some(
-          (f) => f.category === "observed_runtime_symptom" && /Server error 500/.test(f.title),
-        ),
+        runtimeTitles.some((t) => /Server error 500/.test(t)),
+        runtimeTitles.join(" | "),
       ).toBe(true);
       // axe accessibility result (unlabeled filter input).
       const axe = r.findings.find(

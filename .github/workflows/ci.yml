@@ -8,6 +8,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   checks:
     runs-on: ubuntu-latest
@@ -40,3 +44,36 @@ jobs:
       - run: pnpm test:unit
       - run: pnpm test:integration
       - run: pnpm build
+
+  e2e:
+    # Product e2e: real worker + Playwright browsers (Chromium desktop/mobile, Firefox, WebKit)
+    # against the demo target, fake provider only. No repository secrets required.
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    container:
+      image: mcr.microsoft.com/playwright:v1.65.1-noble
+      options: --ipc=host --init
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_USER: testapp
+          POSTGRES_PASSWORD: ci-only-password
+          POSTGRES_DB: testapp
+        options: >-
+          --health-cmd "pg_isready -U testapp -d testapp"
+          --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      CI: "1"
+      DATABASE_URL: postgres://testapp:ci-only-password@postgres:5432/testapp
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash scripts/e2e-inner.sh
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-diagnostics
+          path: |
+            playwright-report
+            diagnostics/e2e
+          retention-days: 7

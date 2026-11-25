@@ -129,7 +129,8 @@ export async function runScenario(input: ScenarioRunInput): Promise<ScenarioRunO
   };
   const page = await context.newPage();
   page.on("console", (m) => {
-    if (m.type() === "error")
+    // "Failed to load resource" duplicates the network events recorded below.
+    if (m.type() === "error" && !m.text().startsWith("Failed to load resource"))
       pushEvent({ type: "console", message: m.text(), url: sanitizeUrl(page.url()) });
   });
   page.on("pageerror", (err) =>
@@ -150,7 +151,10 @@ export async function runScenario(input: ScenarioRunInput): Promise<ScenarioRunO
     });
   });
   page.on("response", (res) => {
-    if (res.status() >= 400) {
+    // 4xx on a document navigation (e.g. a 422 validation response to a form
+    // post) is judged by the scenario's assertions, not as a runtime symptom.
+    const documentClientError = res.request().isNavigationRequest() && res.status() < 500;
+    if (res.status() >= 400 && !documentClientError) {
       pushEvent({
         type: "network",
         message: `HTTP ${res.status()}`,

@@ -1,0 +1,7 @@
+# Overrides used ONLY by scripts/verify-compose.sh for an isolated, disposable
+# verification project. Nothing is published to the host.
+services:
+  web:
+    ports: !reset []
+  demo-target:
+    profiles: []

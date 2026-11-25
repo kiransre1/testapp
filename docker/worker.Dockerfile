@@ -28,7 +28,9 @@ FROM mcr.microsoft.com/playwright:v1.65.1-noble AS runtime
 ENV NODE_ENV=production PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
     MIGRATIONS_DIR=/app/drizzle FAKE_PROVIDER_FIXTURE_DIR=/app/fixtures
 WORKDIR /app
-COPY --from=build --chown=pwuser:pwuser /out ./
-RUN mkdir -p /data && chown pwuser:pwuser /data
-USER pwuser
+# Web and worker share the artifact volume; both run as uid 1000 ("ubuntu"
+# here, "node" in the web image) so private 0600 artifacts are readable by both.
+COPY --from=build --chown=1000:1000 /out ./
+RUN mkdir -p /data && chown 1000:1000 /data && chmod 700 /data
+USER 1000
 CMD ["node", "dist/main.mjs"]
