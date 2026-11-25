@@ -8,6 +8,13 @@
       "when": 1795619963201,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1795620742601,
+      "tag": "0001_scenario_definition_snapshot",
+      "breakpoints": true
     }
   ]
 }

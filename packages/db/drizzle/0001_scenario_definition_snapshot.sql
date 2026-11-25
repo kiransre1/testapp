@@ -1,0 +1,1 @@
+ALTER TABLE "scenario_results" ADD COLUMN "definition" jsonb NOT NULL;

@@ -1,6 +1,9 @@
-import { getPublicTarget, listBriefVersions } from "@testapp/db";
+import { getPublicTarget, listBriefVersions, listPlans } from "@testapp/db";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { fmtDate } from "@/components/badge";
+import { ActionButton } from "@/components/action-button";
+import { AutoRefresh } from "@/components/auto-refresh";
+import { Badge, FakeBadge, fmtDate } from "@/components/badge";
 import { getDb } from "@/lib/server/context";
 import { BriefForm, CredentialForm, SettingsForm } from "./target-forms";
 
@@ -12,6 +15,7 @@ export default async function TargetPage({ params }: { params: Promise<{ id: str
   if (!target) notFound();
   const briefs = await listBriefVersions(db, id);
   const latest = briefs[0];
+  const plans = await listPlans(db, id);
 
   return (
     <>
@@ -52,6 +56,37 @@ export default async function TargetPage({ params }: { params: Promise<{ id: str
           </div>
         </dl>
       </div>
+
+      <AutoRefresh active={plans.some((p) => p.status === "generating")} />
+      <section aria-labelledby="plans-h" className="card">
+        <h2 id="plans-h">Test plans</h2>
+        <ActionButton
+          url={`/api/targets/${id}/plans`}
+          label="Generate plan"
+          busyLabel="Queuing…"
+          redirectTo="/plans/{planId}"
+        />
+        {plans.length === 0 ? (
+          <p className="muted">
+            No plans yet. Generating a plan uses the configured LLM provider; run a preflight first
+            so discovery data is available.
+          </p>
+        ) : (
+          <ul>
+            {plans.map((p) => (
+              <li key={p.id}>
+                <Link href={`/plans/${p.id}`}>Plan v{p.version}</Link>{" "}
+                <Badge
+                  value={p.status === "ready" ? "ok" : p.status === "failed" ? "failed" : "running"}
+                  label={p.status}
+                />{" "}
+                <FakeBadge isFake={p.isFake} />{" "}
+                <span className="small muted">{fmtDate(p.createdAt)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section aria-labelledby="brief-h" className="card">
         <h2 id="brief-h">Brief (version {latest?.version ?? 0})</h2>

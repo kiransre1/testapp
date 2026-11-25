@@ -1,0 +1,524 @@
+{
+  "match": "TaskPad",
+  "plan": {
+    "personas": [
+      {
+        "key": "P-MEMBER",
+        "name": "Team member (desktop)",
+        "role": "Signed-in member managing their own tasks",
+        "permissions": ["View own tasks", "Create tasks", "Edit own tasks"],
+        "goal": "Capture and update personal tasks quickly",
+        "successCriterion": "New and edited tasks appear in the list and survive a reload",
+        "productFamiliarity": "medium",
+        "technicalConfidence": "medium",
+        "deviceProfile": "desktop",
+        "accessibilityNeeds": [],
+        "startingDataState": "A few seeded synthetic tasks exist",
+        "behaviours": [
+          "Uses the add-task form",
+          "Reloads to confirm changes",
+          "Visits reports occasionally"
+        ],
+        "mayNotPerform": ["Delete tasks", "Change account settings", "Send invitations"]
+      },
+      {
+        "key": "P-MOBILE",
+        "name": "Team member on a phone",
+        "role": "Signed-in member using a small viewport",
+        "permissions": ["View own tasks", "Create tasks"],
+        "goal": "Check tasks and reach reports on the go",
+        "successCriterion": "Primary navigation and the task list are usable on a narrow screen",
+        "productFamiliarity": "medium",
+        "technicalConfidence": "low",
+        "deviceProfile": "mobile",
+        "accessibilityNeeds": [],
+        "startingDataState": "A few seeded synthetic tasks exist",
+        "behaviours": ["Relies on visible navigation links"],
+        "mayNotPerform": ["Delete tasks"]
+      },
+      {
+        "key": "P-AT-USER",
+        "name": "Screen-reader user",
+        "role": "Signed-in member using assistive technology",
+        "permissions": ["View own tasks", "Create tasks"],
+        "goal": "Find and filter tasks with a screen reader",
+        "successCriterion": "All controls expose accessible names",
+        "productFamiliarity": "high",
+        "technicalConfidence": "high",
+        "deviceProfile": "desktop",
+        "accessibilityNeeds": ["Screen reader", "Keyboard-only navigation"],
+        "startingDataState": "A few seeded synthetic tasks exist",
+        "behaviours": ["Navigates by landmarks and form labels"],
+        "mayNotPerform": ["Delete tasks"]
+      },
+      {
+        "key": "P-VISITOR",
+        "name": "Signed-out visitor",
+        "role": "Unauthenticated visitor",
+        "permissions": [],
+        "goal": "Reach the sign-in page",
+        "successCriterion": "Protected pages redirect to sign-in",
+        "productFamiliarity": "none",
+        "technicalConfidence": "medium",
+        "deviceProfile": "desktop",
+        "accessibilityNeeds": [],
+        "startingDataState": "No session",
+        "behaviours": ["Opens deep links directly"],
+        "mayNotPerform": ["Anything requiring an account"]
+      }
+    ],
+    "journeys": [
+      {
+        "key": "J-VIEW",
+        "title": "View task list",
+        "personaKeys": ["P-MEMBER", "P-MOBILE", "P-AT-USER"],
+        "summary": "Sign in and see the task list.",
+        "priority": "P0"
+      },
+      {
+        "key": "J-CREATE",
+        "title": "Create a task",
+        "personaKeys": ["P-MEMBER"],
+        "summary": "Add a task with a title and see it listed after reload.",
+        "priority": "P0"
+      },
+      {
+        "key": "J-EDIT",
+        "title": "Edit a task",
+        "personaKeys": ["P-MEMBER"],
+        "summary": "Rename an existing task and see the new title persist.",
+        "priority": "P0"
+      },
+      {
+        "key": "J-REPORTS",
+        "title": "View reports",
+        "personaKeys": ["P-MEMBER", "P-MOBILE"],
+        "summary": "Open the reports page and see task statistics.",
+        "priority": "P1"
+      },
+      {
+        "key": "J-HELP",
+        "title": "Read help",
+        "personaKeys": ["P-MEMBER"],
+        "summary": "Open the help page.",
+        "priority": "P2"
+      },
+      {
+        "key": "J-ACCESS",
+        "title": "Access control",
+        "personaKeys": ["P-VISITOR"],
+        "summary": "Signed-out access to protected pages.",
+        "priority": "P1"
+      }
+    ],
+    "coverage": [
+      {
+        "area": "Core value: task list",
+        "journeyKey": "J-VIEW",
+        "scenarioKeys": ["SC-001"],
+        "status": "covered",
+        "notes": ""
+      },
+      {
+        "area": "Create (happy path)",
+        "journeyKey": "J-CREATE",
+        "scenarioKeys": ["SC-002"],
+        "status": "covered",
+        "notes": ""
+      },
+      {
+        "area": "Persistence after reload",
+        "journeyKey": "J-CREATE",
+        "scenarioKeys": ["SC-003", "SC-005"],
+        "status": "covered",
+        "notes": ""
+      },
+      {
+        "area": "Validation: missing title",
+        "journeyKey": "J-CREATE",
+        "scenarioKeys": ["SC-004"],
+        "status": "covered",
+        "notes": ""
+      },
+      {
+        "area": "Edit",
+        "journeyKey": "J-EDIT",
+        "scenarioKeys": ["SC-005"],
+        "status": "covered",
+        "notes": ""
+      },
+      {
+        "area": "Loading and error states",
+        "journeyKey": "J-REPORTS",
+        "scenarioKeys": ["SC-006"],
+        "status": "partial",
+        "notes": "Only the reports page"
+      },
+      {
+        "area": "Automated accessibility",
+        "journeyKey": "J-VIEW",
+        "scenarioKeys": ["SC-007", "SC-008"],
+        "status": "partial",
+        "notes": "axe-core at selected states; not a WCAG audit"
+      },
+      {
+        "area": "Responsive navigation",
+        "journeyKey": "J-REPORTS",
+        "scenarioKeys": ["SC-009"],
+        "status": "covered",
+        "notes": "Meaningful on the mobile profile"
+      },
+      {
+        "area": "Permissions: signed-out access",
+        "journeyKey": "J-ACCESS",
+        "scenarioKeys": ["SC-010"],
+        "status": "covered",
+        "notes": ""
+      },
+      {
+        "area": "Role-based permissions",
+        "scenarioKeys": [],
+        "status": "unsupported",
+        "notes": "The brief describes a single member role only"
+      },
+      {
+        "area": "Due-date boundary rules",
+        "scenarioKeys": [],
+        "status": "unsupported",
+        "notes": "The brief does not state due-date rules"
+      },
+      {
+        "area": "Slow or failed requests",
+        "scenarioKeys": [],
+        "status": "not_covered",
+        "notes": "Network throttling is outside v1 scope"
+      }
+    ],
+    "scenarios": [
+      {
+        "key": "SC-001",
+        "version": 1,
+        "title": "Signed-in member sees their task list",
+        "rationale": "Core value: after sign-in the member must land on a populated task list.",
+        "priority": "P0",
+        "riskArea": "core_flow",
+        "personaKey": "P-MEMBER",
+        "journeyKey": "J-VIEW",
+        "preconditions": ["Signed in with the synthetic account"],
+        "startRoute": "/tasks",
+        "requiresAuth": true,
+        "dataMode": "read_only",
+        "prohibitedActionClass": "none",
+        "maxActions": 6,
+        "steps": [
+          { "action": "navigate", "target": "/tasks" },
+          { "action": "assertUrl", "contains": "/tasks" },
+          {
+            "action": "assertVisible",
+            "locator": { "by": "role", "role": "heading", "name": "Your tasks" }
+          },
+          {
+            "action": "assertCount",
+            "locator": { "by": "testId", "value": "task-item" },
+            "count": 1,
+            "comparison": "gte"
+          },
+          { "action": "screenshot", "label": "task list" }
+        ],
+        "expectedOutcomes": ["Task list heading is visible", "At least one task is listed"]
+      },
+      {
+        "key": "SC-002",
+        "version": 1,
+        "title": "Create a disposable task",
+        "rationale": "Happy path for the primary write journey.",
+        "priority": "P0",
+        "riskArea": "core_flow",
+        "personaKey": "P-MEMBER",
+        "journeyKey": "J-CREATE",
+        "preconditions": ["Signed in"],
+        "startRoute": "/tasks",
+        "requiresAuth": true,
+        "dataMode": "disposable_write",
+        "prohibitedActionClass": "none",
+        "maxActions": 8,
+        "steps": [
+          { "action": "navigate", "target": "/tasks" },
+          {
+            "action": "fill",
+            "locator": { "by": "label", "value": "Title" },
+            "value": "{{run}} Write report"
+          },
+          { "action": "click", "locator": { "by": "role", "role": "button", "name": "Add task" } },
+          {
+            "action": "assertText",
+            "locator": { "by": "role", "role": "status" },
+            "text": "Task added"
+          },
+          {
+            "action": "assertVisible",
+            "locator": { "by": "text", "value": "{{run}} Write report" }
+          }
+        ],
+        "expectedOutcomes": ["A confirmation is shown", "The new task appears in the list"]
+      },
+      {
+        "key": "SC-003",
+        "version": 1,
+        "title": "Created task persists after reload",
+        "rationale": "Persistence: a created record must survive a page reload.",
+        "priority": "P1",
+        "riskArea": "persistence",
+        "personaKey": "P-MEMBER",
+        "journeyKey": "J-CREATE",
+        "preconditions": ["Signed in"],
+        "startRoute": "/tasks",
+        "requiresAuth": true,
+        "dataMode": "disposable_write",
+        "prohibitedActionClass": "none",
+        "maxActions": 8,
+        "steps": [
+          { "action": "navigate", "target": "/tasks" },
+          {
+            "action": "fill",
+            "locator": { "by": "label", "value": "Title" },
+            "value": "{{run}} Persist check"
+          },
+          { "action": "click", "locator": { "by": "role", "role": "button", "name": "Add task" } },
+          {
+            "action": "assertVisible",
+            "locator": { "by": "text", "value": "{{run}} Persist check" }
+          },
+          { "action": "reload" },
+          {
+            "action": "assertVisible",
+            "locator": { "by": "text", "value": "{{run}} Persist check" }
+          }
+        ],
+        "expectedOutcomes": ["The task is still listed after reload"]
+      },
+      {
+        "key": "SC-004",
+        "version": 1,
+        "title": "Missing title is rejected with an error",
+        "rationale": "Validation: the brief says a title is required.",
+        "priority": "P1",
+        "riskArea": "validation",
+        "personaKey": "P-MEMBER",
+        "journeyKey": "J-CREATE",
+        "preconditions": ["Signed in"],
+        "startRoute": "/tasks",
+        "requiresAuth": true,
+        "dataMode": "disposable_write",
+        "prohibitedActionClass": "none",
+        "maxActions": 6,
+        "steps": [
+          { "action": "navigate", "target": "/tasks" },
+          { "action": "fill", "locator": { "by": "label", "value": "Title" }, "value": "" },
+          { "action": "click", "locator": { "by": "role", "role": "button", "name": "Add task" } },
+          {
+            "action": "assertText",
+            "locator": { "by": "role", "role": "alert" },
+            "text": "Title is required"
+          }
+        ],
+        "expectedOutcomes": ["An error explains that a title is required", "No task is created"]
+      },
+      {
+        "key": "SC-005",
+        "version": 1,
+        "title": "Edited task title is saved and persists",
+        "rationale": "Persistence of edits is a core journey in the brief.",
+        "priority": "P0",
+        "riskArea": "persistence",
+        "personaKey": "P-MEMBER",
+        "journeyKey": "J-EDIT",
+        "preconditions": ["Signed in"],
+        "startRoute": "/tasks",
+        "requiresAuth": true,
+        "dataMode": "disposable_write",
+        "prohibitedActionClass": "none",
+        "maxActions": 12,
+        "steps": [
+          { "action": "navigate", "target": "/tasks" },
+          {
+            "action": "fill",
+            "locator": { "by": "label", "value": "Title" },
+            "value": "{{run}} Original"
+          },
+          { "action": "click", "locator": { "by": "role", "role": "button", "name": "Add task" } },
+          {
+            "action": "click",
+            "locator": { "by": "role", "role": "link", "name": "Edit {{run}} Original" }
+          },
+          {
+            "action": "assertVisible",
+            "locator": { "by": "role", "role": "heading", "name": "Edit task" }
+          },
+          {
+            "action": "fill",
+            "locator": { "by": "label", "value": "Title" },
+            "value": "{{run}} Renamed"
+          },
+          {
+            "action": "click",
+            "locator": { "by": "role", "role": "button", "name": "Save changes" }
+          },
+          {
+            "action": "assertVisible",
+            "locator": { "by": "text", "value": "{{run}} Renamed" },
+            "description": "renamed task is listed after saving"
+          },
+          { "action": "reload" },
+          {
+            "action": "assertVisible",
+            "locator": { "by": "text", "value": "{{run}} Renamed" },
+            "description": "renamed task is still listed after reload"
+          }
+        ],
+        "expectedOutcomes": ["The list shows the new title after saving and after reload"]
+      },
+      {
+        "key": "SC-006",
+        "version": 1,
+        "title": "Reports page shows task statistics",
+        "rationale": "The brief says Reports shows the total number of tasks.",
+        "priority": "P1",
+        "riskArea": "error_handling",
+        "personaKey": "P-MEMBER",
+        "journeyKey": "J-REPORTS",
+        "preconditions": ["Signed in"],
+        "startRoute": "/reports",
+        "requiresAuth": true,
+        "dataMode": "read_only",
+        "prohibitedActionClass": "none",
+        "maxActions": 5,
+        "steps": [
+          { "action": "navigate", "target": "/reports" },
+          {
+            "action": "assertVisible",
+            "locator": { "by": "role", "role": "heading", "name": "Reports" }
+          },
+          { "action": "assertVisible", "locator": { "by": "text", "value": "Total tasks:" } }
+        ],
+        "expectedOutcomes": ["Statistics including the total number of tasks are visible"]
+      },
+      {
+        "key": "SC-007",
+        "version": 1,
+        "title": "Task list passes automated accessibility checks",
+        "rationale": "Screen-reader users need named controls on the main page.",
+        "priority": "P2",
+        "riskArea": "accessibility",
+        "personaKey": "P-AT-USER",
+        "journeyKey": "J-VIEW",
+        "preconditions": ["Signed in"],
+        "startRoute": "/tasks",
+        "requiresAuth": true,
+        "dataMode": "read_only",
+        "prohibitedActionClass": "none",
+        "maxActions": 4,
+        "steps": [
+          { "action": "navigate", "target": "/tasks" },
+          {
+            "action": "assertVisible",
+            "locator": { "by": "role", "role": "heading", "name": "Your tasks" }
+          },
+          { "action": "runAccessibilityCheck", "label": "task list" }
+        ],
+        "expectedOutcomes": ["No automated accessibility rule violations"]
+      },
+      {
+        "key": "SC-008",
+        "version": 1,
+        "title": "Help page renders and passes automated accessibility checks",
+        "rationale": "Help content must be reachable and accessible.",
+        "priority": "P2",
+        "riskArea": "accessibility",
+        "personaKey": "P-MEMBER",
+        "journeyKey": "J-HELP",
+        "preconditions": ["Signed in"],
+        "startRoute": "/help",
+        "requiresAuth": true,
+        "dataMode": "read_only",
+        "prohibitedActionClass": "none",
+        "maxActions": 4,
+        "steps": [
+          { "action": "navigate", "target": "/help" },
+          {
+            "action": "assertVisible",
+            "locator": { "by": "role", "role": "heading", "name": "Help" }
+          },
+          { "action": "runAccessibilityCheck", "label": "help page" }
+        ],
+        "expectedOutcomes": [
+          "Help heading is visible",
+          "No automated accessibility rule violations"
+        ]
+      },
+      {
+        "key": "SC-009",
+        "version": 1,
+        "title": "Primary navigation reaches Reports",
+        "rationale": "Members on any device must be able to reach Reports from the main navigation.",
+        "priority": "P2",
+        "riskArea": "responsive",
+        "personaKey": "P-MOBILE",
+        "journeyKey": "J-REPORTS",
+        "preconditions": ["Signed in"],
+        "startRoute": "/tasks",
+        "requiresAuth": true,
+        "dataMode": "read_only",
+        "prohibitedActionClass": "none",
+        "maxActions": 5,
+        "steps": [
+          { "action": "navigate", "target": "/tasks" },
+          {
+            "action": "assertVisible",
+            "locator": { "by": "role", "role": "link", "name": "Reports" },
+            "description": "Reports link is visible in the primary navigation"
+          },
+          { "action": "click", "locator": { "by": "role", "role": "link", "name": "Reports" } },
+          { "action": "assertUrl", "contains": "/reports" }
+        ],
+        "expectedOutcomes": ["The Reports link is visible and navigates to /reports"]
+      },
+      {
+        "key": "SC-010",
+        "version": 1,
+        "title": "Signed-out visitor is redirected to sign-in",
+        "rationale": "Protected pages must not be visible without a session.",
+        "priority": "P1",
+        "riskArea": "permissions",
+        "personaKey": "P-VISITOR",
+        "journeyKey": "J-ACCESS",
+        "preconditions": ["No session"],
+        "startRoute": "/tasks",
+        "requiresAuth": false,
+        "dataMode": "read_only",
+        "prohibitedActionClass": "none",
+        "maxActions": 4,
+        "steps": [
+          { "action": "navigate", "target": "/tasks" },
+          { "action": "assertUrl", "contains": "/login" },
+          {
+            "action": "assertVisible",
+            "locator": { "by": "role", "role": "heading", "name": "Sign in to TaskPad" }
+          }
+        ],
+        "expectedOutcomes": ["The visitor sees the sign-in page instead of tasks"]
+      }
+    ],
+    "assumptions": [
+      "Each member only sees their own tasks (single role described in the brief).",
+      "A task title is required; other fields are optional."
+    ],
+    "unsupportedAreas": [
+      { "area": "Role-based permissions", "reason": "Only one role is described." },
+      {
+        "area": "Due-date business rules",
+        "reason": "The brief does not define due-date validation."
+      }
+    ]
+  }
+}

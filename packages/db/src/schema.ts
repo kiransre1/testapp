@@ -396,6 +396,8 @@ export const scenarioResults = pgTable(
     scenarioVersion: integer("scenario_version").notNull(),
     title: text("title").notNull(),
     ordinal: integer("ordinal").notNull(),
+    /** Snapshot of the executed scenario definition (plan edits never rewrite history). */
+    definition: jsonb("definition").$type<Scenario>().notNull(),
     status: scenarioStatusEnum("status").notNull().default("pending"),
     reason: text("reason"),
     actionCount: integer("action_count").notNull().default(0),
