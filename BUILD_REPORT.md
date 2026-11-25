@@ -1,16 +1,16 @@
 # BUILD_REPORT
 
-**Overall status: PARTIAL.** Every mandatory v1 requirement is implemented, and every
-mandatory verification ran and passed against `VERIFIED_CODE_SHA`. The commits could not be
-pushed to GitHub because no non-interactive write credential exists on this host. COMPLETE
-requires a verified remote push, so the status is PARTIAL.
+**Overall status: COMPLETE.** Every mandatory v1 requirement is implemented. Every mandatory
+verification ran and passed against `VERIFIED_CODE_SHA`. Later commits are documentation/status
+only, and the branch was pushed with its remote SHA confirmed.
 
 - **VERIFIED_CODE_SHA:** `50ea12bc63f2c10edd51b49a90a257d9f4c71b5f` (`50ea12b`)
 - **LAST_LOCAL_GREEN_SHA:** `50ea12b`. A documentation/status-only commit follows it; see the
   final response for that SHA.
-- **LAST_REMOTE_GREEN_SHA:** none. `origin/autonomous/initial-build` does not exist.
-- **Unpushed range:** all commits on `autonomous/initial-build`, from the root commit `8da11c8`
-  through the final documentation commit. The remote repository is still empty.
+- **LAST_REMOTE_GREEN_SHA:** `be7d3032a795b7cad58d4eb744608f137c03a8c8`, confirmed with
+  `git ls-remote` after the operator signed in with the GitHub CLI.
+- **Delivery:** the initial pushes failed (no credential). After `gh auth login` by the operator
+  and `gh auth setup-git`, the branch was pushed (see BUILD_STATUS.md).
 - **Live Anthropic behaviour was not exercised.** No paid API calls were made. Real-model plan
   and recommendation quality is unverified.
 
@@ -105,7 +105,8 @@ No mandatory check was skipped, NOT RUN or failed in the final verification.
 
 ### Significant failures and retries during the build (all resolved before VERIFIED_CODE_SHA)
 
-- `git push` failed with an authentication error and was not retried, per policy.
+- `git push` initially failed with an authentication error and was not retried. It succeeded
+  after the operator signed in with the GitHub CLI.
 - pnpm 12's minimum-release-age policy rejected packages published less than a day earlier. The
   policy was kept and older versions were selected.
 - The first e2e run found a cross-host absolute redirect in the export route (fixed with a
@@ -174,10 +175,7 @@ See [docs/LIMITATIONS.md](docs/LIMITATIONS.md). In summary:
 
 ## Remaining issues and incomplete requirements
 
-- **Delivery to GitHub was not performed** (authentication blocker). This is the only reason the
-  status is not COMPLETE.
-- The GitHub Actions workflows (`ci.yml`, checks + e2e) have never run on GitHub because nothing
-  was pushed. Their steps mirror the locally verified commands, but CI execution itself is
+- The GitHub Actions workflows (`ci.yml`, checks + e2e) had not finished on GitHub when this report was written (the first run was queued after the push). Their steps mirror the locally verified commands, but CI execution itself is
   UNVERIFIED.
 - The `planning` run state exists for future plan-and-run flows; the current UI plans and runs
   as separate steps.
@@ -205,16 +203,8 @@ Full verification:
 scripts/verify.sh
 ```
 
-Push the branch, once you have GitHub write credentials:
-
-```bash
-git push -u origin autonomous/initial-build
-```
-
 ## External setup still required
 
-- GitHub write credentials (for example a credential helper or a `gh auth login` done by you),
-  then push the branch.
 - For real-model use: `LLM_PROVIDER=anthropic`, `ANTHROPIC_API_KEY`, an `ANTHROPIC_MODEL`
   supported by your account, and optional pricing variables for cost estimates.
 - For remote access: an authenticated HTTPS reverse proxy with `COOKIE_SECURE=true` and
