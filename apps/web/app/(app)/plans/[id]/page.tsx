@@ -3,8 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { Badge, FakeBadge, fmtDate } from "@/components/badge";
-import { getDb } from "@/lib/server/context";
-import { describeAction } from "@/lib/describe";
+import { getDb, getEnv } from "@/lib/server/context";
+import { RunConfigForm } from "./run-config-form";
+import { describeAction } from "@testapp/core";
 import { ScenarioJsonEditor, ScenarioToggle } from "./scenario-editor";
 
 export default async function PlanPage({ params }: { params: Promise<{ id: string }> }) {
@@ -15,6 +16,7 @@ export default async function PlanPage({ params }: { params: Promise<{ id: strin
   if (!data) notFound();
   const { plan, personas, journeys, scenarios } = data;
   const target = await getPublicTarget(db, plan.targetId);
+  const env = getEnv();
 
   return (
     <>
@@ -53,6 +55,24 @@ export default async function PlanPage({ params }: { params: Promise<{ id: strin
 
       {plan.status === "ready" && (
         <>
+          <section className="card" aria-labelledby="run-h">
+            <h2 id="run-h">Start a run</h2>
+            <RunConfigForm
+              planId={plan.id}
+              defaults={{
+                maxElapsedMinutes: env.DEFAULT_MAX_ELAPSED_MINUTES,
+                maxScenarios: env.DEFAULT_MAX_SCENARIOS,
+                maxActionsPerScenario: env.DEFAULT_MAX_ACTIONS_PER_SCENARIO,
+                maxTotalActions: env.DEFAULT_MAX_TOTAL_ACTIONS,
+                maxInputTokens: env.DEFAULT_MAX_INPUT_TOKENS,
+                maxOutputTokens: env.DEFAULT_MAX_OUTPUT_TOKENS,
+                maxEstimatedCostUsd: env.DEFAULT_MAX_ESTIMATED_COST_USD,
+                maxRepeatedActions: env.DEFAULT_MAX_REPEATED_ACTIONS,
+                maxConsecutiveBlocked: env.DEFAULT_MAX_CONSECUTIVE_BLOCKED,
+              }}
+            />
+          </section>
+
           <section aria-labelledby="personas-h">
             <h2 id="personas-h">Personas</h2>
             <div className="table-wrap">

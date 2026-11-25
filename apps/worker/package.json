@@ -12,10 +12,12 @@
   "dependencies": {
     "@anthropic-ai/sdk": "1.14.0",
     "@axe-core/playwright": "4.14.1",
+    "@node-rs/argon2": "2.2.2",
     "@testapp/core": "workspace:*",
     "@testapp/db": "workspace:*",
     "drizzle-orm": "0.45.4",
     "playwright": "1.65.1",
+    "postgres": "3.4.9",
     "zod": "4.6.7"
   },
   "devDependencies": {

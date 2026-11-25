@@ -99,6 +99,14 @@ async function loop(): Promise<void> {
   await handle.close();
 }
 
+// Never let a stray rejection (e.g. from a browser event handler) kill the worker
+// mid-run; it is logged and the current job's own error handling decides the outcome.
+process.on("unhandledRejection", (reason) => {
+  log("unhandled rejection", {
+    error: reason instanceof Error ? reason.message.split("\n")[0] : String(reason),
+  });
+});
+
 for (const sig of ["SIGTERM", "SIGINT"] as const) {
   process.on(sig, () => {
     if (stopping) process.exit(1);

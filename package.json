@@ -11,7 +11,7 @@
     "format": "biome format --write .",
     "format:check": "biome format .",
     "lint": "biome lint .",
-    "typecheck": "pnpm -r --workspace-concurrency=1 run typecheck",
+    "typecheck": "pnpm -r --workspace-concurrency=1 run typecheck && tsc -p e2e/tsconfig.json",
     "test:unit": "vitest run --project unit",
     "test:integration": "vitest run --project integration",
     "test": "vitest run",
@@ -23,8 +23,10 @@
     "verify": "bash scripts/verify.sh"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.1",
     "@biomejs/biome": "^2.6.0",
     "@playwright/test": "1.65.1",
+    "@testapp/core": "workspace:*",
     "@types/node": "^26.6.0",
     "typescript": "6.0.3",
     "vitest": "^5.1.0"

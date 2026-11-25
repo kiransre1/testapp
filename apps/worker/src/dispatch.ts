@@ -1,6 +1,8 @@
 import { type JobKind, type JobRow, logEvent, reclaimStaleJobs } from "@testapp/db";
 import type { WorkerContext } from "./context";
 import { handleGeneratePlan } from "./jobs/plan";
+import { handlePreflight, markPreflightInterrupted } from "./jobs/preflight";
+import { handleExecuteRun, markRunInterrupted } from "./jobs/run";
 
 export type JobHandler = (
   ctx: WorkerContext,
@@ -10,12 +12,8 @@ export type JobHandler = (
 
 export const handlers: Record<JobKind, JobHandler> = {
   generate_plan: handleGeneratePlan,
-  preflight: async () => {
-    throw new Error("preflight jobs are not implemented in this build");
-  },
-  execute_run: async () => {
-    throw new Error("run execution is not implemented in this build");
-  },
+  preflight: handlePreflight,
+  execute_run: handleExecuteRun,
 };
 
 /** Recover from crashed/restarted workers: requeue or fail stale jobs and fix domain state. */
@@ -36,6 +34,10 @@ export async function onStaleJobs(ctx: WorkerContext): Promise<void> {
       type: "job.interrupted",
       message: `${job.kind} interrupted by worker stop`,
     });
+    if (job.kind === "execute_run" && job.payload.runId)
+      await markRunInterrupted(ctx, job.payload.runId);
+    if (job.kind === "preflight" && job.payload.preflightId)
+      await markPreflightInterrupted(ctx, job.payload.preflightId);
     if (job.kind === "generate_plan" && job.payload.planVersionId) {
       const { failPlanVersion } = await import("@testapp/db");
       await failPlanVersion(

@@ -1,4 +1,4 @@
-import type { Action, Locator } from "@testapp/core";
+import type { Action, Locator } from "./schemas/plan";
 
 export function describeLocator(l: Locator): string {
   const nth = "nth" in l && l.nth !== undefined ? ` [#${l.nth}]` : "";

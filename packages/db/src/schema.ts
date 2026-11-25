@@ -376,11 +376,13 @@ export const runs = pgTable(
 );
 
 export type BrowserEvent = {
-  type: "console" | "page_error" | "network";
+  type: "console" | "page_error" | "network" | "blocked_navigation";
   message: string;
   url?: string;
   status?: number;
   method?: string;
+  /** Index of the step during which the event happened (-1 before the first step). */
+  step?: number;
   at: string;
 };
 
