@@ -1,0 +1,46 @@
+# Secrets and environment
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and build outputs
+node_modules/
+.next/
+dist/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# Playwright downloads and outputs
+.cache/ms-playwright/
+ms-playwright/
+test-results/
+playwright-report/
+blob-report/
+*.trace.zip
+trace/
+traces/
+screenshots/
+videos/
+
+# Runtime data, databases, artifacts
+.data/
+data/
+*.db
+*.sqlite
+artifacts/
+uploads/
+
+# Logs, diagnostics, coverage
+*.log
+logs/
+diagnostics/
+coverage/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

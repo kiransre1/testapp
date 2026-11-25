@@ -1,0 +1,32 @@
+{
+  "name": "testapp",
+  "private": true,
+  "version": "0.1.0",
+  "description": "TestApp: AI-assisted black-box QA and product-evaluation workbench",
+  "packageManager": "pnpm@12.23.0",
+  "engines": {
+    "node": ">=26.13.1 <27"
+  },
+  "scripts": {
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "typecheck": "pnpm -r --workspace-concurrency=1 run typecheck",
+    "test:unit": "vitest run --project unit",
+    "test:integration": "vitest run --project integration",
+    "test": "vitest run",
+    "build": "pnpm -r --workspace-concurrency=1 run build",
+    "db:migrate": "pnpm --filter @testapp/db run migrate",
+    "db:generate": "pnpm --filter @testapp/db run generate",
+    "bootstrap:admin": "pnpm --filter @testapp/db run bootstrap-admin",
+    "test:e2e": "playwright test -c e2e/playwright.config.ts",
+    "verify": "bash scripts/verify.sh"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.0",
+    "@playwright/test": "1.65.1",
+    "@types/node": "^26.6.0",
+    "typescript": "6.0.3",
+    "vitest": "^5.1.0"
+  }
+}

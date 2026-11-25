@@ -1,0 +1,12 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+allowBuilds:
+  esbuild: true
+  "@biomejs/biome": true
+  "@node-rs/argon2": false
+  sharp: false
+  unrs-resolver: false
+minimumReleaseAgeExclude:
+  - "@anthropic-ai/sdk@1.14.0"
+  - "@axe-core/playwright@4.14.1"

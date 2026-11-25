@@ -1,0 +1,108 @@
+# TestApp Docker Compose bundle. Build-only deliverable: no remote deployment.
+# Usage: cp .env.example .env  (fill in secrets) ; docker compose up -d --build
+# Demo target: docker compose --profile demo up -d --build
+name: testapp
+
+x-app-env: &app-env
+  DATABASE_URL: postgres://${POSTGRES_USER:-testapp}:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@postgres:5432/${POSTGRES_DB:-testapp}
+  APP_BASE_URL: ${APP_BASE_URL:-http://127.0.0.1:3000}
+  SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+  APP_ENCRYPTION_KEY: ${APP_ENCRYPTION_KEY:?set APP_ENCRYPTION_KEY in .env}
+  DATA_DIR: /data
+  LLM_PROVIDER: ${LLM_PROVIDER:-fake}
+  ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+  ANTHROPIC_MODEL: ${ANTHROPIC_MODEL:-}
+  ANTHROPIC_INPUT_PRICE_PER_MTOK: ${ANTHROPIC_INPUT_PRICE_PER_MTOK:-}
+  ANTHROPIC_OUTPUT_PRICE_PER_MTOK: ${ANTHROPIC_OUTPUT_PRICE_PER_MTOK:-}
+  DEMO_MODE: ${DEMO_MODE:-false}
+  DEMO_TARGET_HOSTNAMES: ${DEMO_TARGET_HOSTNAMES:-demo-target}
+  COOKIE_SECURE: ${COOKIE_SECURE:-false}
+  DEFAULT_MAX_ELAPSED_MINUTES: ${DEFAULT_MAX_ELAPSED_MINUTES:-20}
+  DEFAULT_MAX_SCENARIOS: ${DEFAULT_MAX_SCENARIOS:-20}
+  DEFAULT_MAX_ACTIONS_PER_SCENARIO: ${DEFAULT_MAX_ACTIONS_PER_SCENARIO:-40}
+  DEFAULT_MAX_TOTAL_ACTIONS: ${DEFAULT_MAX_TOTAL_ACTIONS:-400}
+  DEFAULT_MAX_INPUT_TOKENS: ${DEFAULT_MAX_INPUT_TOKENS:-200000}
+  DEFAULT_MAX_OUTPUT_TOKENS: ${DEFAULT_MAX_OUTPUT_TOKENS:-40000}
+  DEFAULT_MAX_ESTIMATED_COST_USD: ${DEFAULT_MAX_ESTIMATED_COST_USD:-2}
+  DEFAULT_MAX_REPEATED_ACTIONS: ${DEFAULT_MAX_REPEATED_ACTIONS:-5}
+  DEFAULT_MAX_CONSECUTIVE_BLOCKED: ${DEFAULT_MAX_CONSECUTIVE_BLOCKED:-3}
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-testapp}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-testapp}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # One-shot: apply migrations, then bootstrap the single admin user if
+  # BOOTSTRAP_ADMIN_EMAIL/PASSWORD are set and no user exists yet.
+  migrate:
+    build: { context: ., dockerfile: docker/worker.Dockerfile }
+    image: testapp-worker:local
+    command: ["sh", "-c", "node dist/migrate.mjs && node dist/bootstrap-admin.mjs --if-configured"]
+    environment:
+      <<: *app-env
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-}
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: "no"
+
+  web:
+    build: { context: ., dockerfile: docker/web.Dockerfile }
+    image: testapp-web:local
+    restart: unless-stopped
+    environment: *app-env
+    volumes:
+      - artifacts:/data
+    ports:
+      - "${WEB_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-3000}:3000"
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  worker:
+    image: testapp-worker:local
+    restart: unless-stopped
+    environment: *app-env
+    volumes:
+      - artifacts:/data
+    init: true
+    ipc: host
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "const s=require('fs').statSync('/tmp/worker-heartbeat');process.exit(Date.now()-s.mtimeMs<60000?0:1)",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 20s
+
+  demo-target:
+    profiles: ["demo"]
+    build: { context: ., dockerfile: docker/demo-target.Dockerfile }
+    image: testapp-demo-target:local
+    restart: unless-stopped
+    environment:
+      DEMO_USERNAME: ${DEMO_TARGET_USERNAME:-demo.user@example.test}
+      DEMO_PASSWORD: ${DEMO_TARGET_PASSWORD:-demo-synthetic-password}
+    # Not published to the host by default. Uncomment to browse it locally:
+    # ports: ["127.0.0.1:4000:4000"]
+
+volumes:
+  pgdata:
+  artifacts:
