@@ -63,6 +63,12 @@ fi
 hygiene() {
   local bad=0
   if git ls-files | grep -E '(^|/)\.env$|(^|/)\.env\.(local|production|development)$|\.pem$|\.key$|(^|/)(test-results|playwright-report|diagnostics|\.data|node_modules|\.next|dist)/' ; then bad=1; fi
+  # Source files hidden by ignore rules would pass locally but be missing from the repository.
+  if git ls-files --others --ignored --exclude-standard \
+    | grep -vE '(^|/)(node_modules|\.next|dist|diagnostics|test-results|playwright-report|\.data)/|\.tsbuildinfo$|next-env\.d\.ts$' \
+    | grep -E '\.(ts|tsx|js|mjs|json|css|sql|md|ya?ml|sh)$'; then
+    echo "ignored source files found (see above)"; bad=1
+  fi
   if git grep -nIE -- '-----BEGIN [A-Z ]*PRIVATE KEY-----|sk-ant-[A-Za-z0-9_-]{20,}|AKIA[0-9A-Z]{16}' -- ':!scripts/verify.sh' ; then bad=1; fi
   return $bad
 }

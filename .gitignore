@@ -21,22 +21,24 @@ test-results/
 playwright-report/
 blob-report/
 *.trace.zip
-trace/
-traces/
-screenshots/
-videos/
+/trace/
+/traces/
+/screenshots/
+/videos/
 
 # Runtime data, databases, artifacts
+# Runtime directories are anchored to the repo root so they never hide source
+# (e.g. apps/web/app/api/artifacts/ is a source route).
 .data/
-data/
+/data/
 *.db
 *.sqlite
-artifacts/
-uploads/
+/artifacts/
+/uploads/
 
 # Logs, diagnostics, coverage
 *.log
-logs/
+/logs/
 diagnostics/
 coverage/
 
