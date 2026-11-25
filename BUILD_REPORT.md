@@ -4,13 +4,21 @@
 verification ran and passed against `VERIFIED_CODE_SHA`. Later commits are documentation/status
 only, and the branch was pushed with its remote SHA confirmed.
 
-- **VERIFIED_CODE_SHA:** `50ea12bc63f2c10edd51b49a90a257d9f4c71b5f` (`50ea12b`)
-- **LAST_LOCAL_GREEN_SHA:** `50ea12b`. A documentation/status-only commit follows it; see the
-  final response for that SHA.
-- **LAST_REMOTE_GREEN_SHA:** `be7d3032a795b7cad58d4eb744608f137c03a8c8`, confirmed with
-  `git ls-remote` after the operator signed in with the GitHub CLI.
-- **Delivery:** the initial pushes failed (no credential). After `gh auth login` by the operator
-  and `gh auth setup-git`, the branch was pushed (see BUILD_STATUS.md).
+- **VERIFIED_CODE_SHA:** `2baa73246a85e11d36a99d91d371d5abee68f83e` (`2baa732`)
+- **Verified twice, independently:**
+  - `scripts/verify.sh` from a clean `git worktree` checkout of `2baa732`: all components
+    PASSED.
+  - GitHub Actions run 45658019786 on `2baa732`: both the `checks` and `e2e` jobs passed.
+- **LAST_LOCAL_GREEN_SHA / LAST_REMOTE_GREEN_SHA:** `2baa732`, confirmed with `git ls-remote`.
+  The documentation-only commit that records this report follows it.
+- **Delivery:** the initial pushes failed because there was no credential. After the operator
+  ran `gh auth login` and `gh auth setup-git` was configured, the branch was pushed and every
+  push was confirmed with `git ls-remote`.
+- **Correction:** an earlier version of this report named `50ea12b` as verified. That local run
+  passed only because `apps/web/app/api/artifacts/[id]/route.ts` existed in the working tree
+  while an unanchored `artifacts/` ignore rule kept it out of git. GitHub CI's clean checkout
+  exposed the problem. It was fixed in `b0bd302`, the hygiene check now fails on ignored source
+  files, and final verification runs from a clean checkout.
 - **Live Anthropic behaviour was not exercised.** No paid API calls were made. Real-model plan
   and recommendation quality is unverified.
 
@@ -82,9 +90,10 @@ Playwright), `apps/demo-target`, `packages/core` (contracts, policies, budgets, 
 reports), `packages/db` (Drizzle + PostgreSQL 18). Node 26.13.1 LTS is pinned everywhere. See
 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-## Verification executed against VERIFIED_CODE_SHA (50ea12b)
+## Verification executed against VERIFIED_CODE_SHA (2baa732)
 
-Command: `scripts/verify.sh`, run 2026-11-25 16:17–16:21 UTC with a clean worktree. The overall
+Command: `scripts/verify.sh`, run 2026-11-25 16:49–16:53 UTC in a separate clean `git worktree`
+checked out at `2baa732`. The overall
 timeout was 90 minutes, and each component had its own finite timeout.
 
 | Component      | Exact command                                                                                                                                                                                                                     | Timeout | Result                                                         |
@@ -99,11 +108,15 @@ timeout was 90 minutes, and each component had its own finite timeout.
 | e2e            | `SKIP_BUILD=1 scripts/e2e-local.sh` (disposable network + PostgreSQL + Playwright 1.65.1 image)                                                                                                                                   | 1800s   | PASSED: 24 tests; secret scan clean (logs + 90 artifact files) |
 | compose-config | `docker compose --env-file .env.example -f docker-compose.yml --profile demo config -q`                                                                                                                                           | 60s     | PASSED                                                         |
 | compose-stack  | `scripts/verify-compose.sh`: builds production images, isolated project `testapp-verify-<ts>`, `up --wait` (health-checked), the same 24 e2e tests against the containers, secret scan of logs and the artifact volume, `down -v` | 3000s   | PASSED: 24 tests; secret scan clean                            |
-| repo-hygiene   | inline `git ls-files` / `git grep` checks                                                                                                                                                                                         | —       | PASSED                                                         |
+| repo-hygiene   | inline `git ls-files` / `git grep` checks, including ignored source files                                                                                                                                                         | —       | PASSED                                                         |
 
 No mandatory check was skipped, NOT RUN or failed in the final verification.
 
-### Significant failures and retries during the build (all resolved before VERIFIED_CODE_SHA)
+GitHub Actions run 45658019786 on `2baa732` also passed. The `checks` job ran format, lint,
+typecheck, unit, integration and build on GitHub's runner. The `e2e` job ran all 24 Playwright
+tests in the Playwright container with a PostgreSQL service.
+
+### Significant failures and retries during the build (all resolved by VERIFIED_CODE_SHA)
 
 - `git push` initially failed with an authentication error and was not retried. It succeeded
   after the operator signed in with the GitHub CLI.
@@ -112,6 +125,10 @@ No mandatory check was skipped, NOT RUN or failed in the final verification.
 - The first e2e run found a cross-host absolute redirect in the export route (fixed with a
   relative `Location`) and a WebKit `route.fulfill` 3xx limitation. That rejection crashed the
   worker; the route handler now never throws, and WebKit uses a policy-checked same-tab GET.
+- GitHub CI (first runs) found two problems. The artifact route had never been committed
+  because an ignore rule hid it (fixed in `b0bd302`). Firefox would not launch in the
+  GitHub container because it refuses to run as root with a foreign `$HOME`; the fix is
+  Playwright's documented `HOME=/root`, in `2baa732`.
 - Compose verification found that artifacts were unreadable across containers (different uids),
   a WCAG 2.2 target-size violation in TestApp's own UI, and Chromium Local Network Access
   blocking the target's own same-origin fetch behind the policy proxy. That last one was a false
@@ -175,8 +192,6 @@ See [docs/LIMITATIONS.md](docs/LIMITATIONS.md). In summary:
 
 ## Remaining issues and incomplete requirements
 
-- The GitHub Actions workflows (`ci.yml`, checks + e2e) had not finished on GitHub when this report was written (the first run was queued after the push). Their steps mirror the locally verified commands, but CI execution itself is
-  UNVERIFIED.
 - The `planning` run state exists for future plan-and-run flows; the current UI plans and runs
   as separate steps.
 
