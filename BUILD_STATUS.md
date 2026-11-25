@@ -27,4 +27,9 @@ LAST_REMOTE_GREEN_SHA: (none yet)
 
 ## Current blockers
 
-None.
+- **Push to GitHub unavailable (authentication).** `git ls-remote` works (the
+  repository is publicly readable) but `git push` fails with
+  `fatal: could not read Username for 'https://github.com': terminal prompts disabled`.
+  No non-interactive credential is configured on this host and `gh` is not
+  installed. Authentication failures are not retried. Work continues with
+  local green commits; the unpushed range is reported in BUILD_REPORT.md.
